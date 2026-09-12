@@ -1,0 +1,34 @@
+# Профиль по умолчанию: применяется, когда маршрут не назвал своего.
+#
+# Умолчание намеренно наблюдательное: меряет обе базовые метрики, судит мягко
+# и только счётом. Пороги deny и записи в наборы -- решения оператора на
+# конкретном профиле, а не умолчание процесса.
+
+mode: enforce
+description: "Счётчик по умолчанию: учёт объектов и объёма, мягкий счёт"
+
+request:
+  enabled: true
+  judge:
+    - counter: api_objects
+      axis: ip
+      at: 60
+      action: score
+      score: 40
+      code: CNT_OBJECTS_IP
+    - counter: api_objects
+      axis: ip
+      at: 90
+      action: score
+      score: 80
+      code: CNT_OBJECTS_IP_HIGH
+  deny_response: counter_limit
+
+response:
+  enabled: true
+  measure:
+    - if:
+        status: [200]
+        content_type: ["application/json", "+json"]
+      source: size_kb
+      counter: json_kb

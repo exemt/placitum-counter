@@ -1,0 +1,58 @@
+# Стендовый профиль прогона tests/counter.
+#
+# Фаза ответа считает вхождения obj= в эхо-ответе -- бэкенд отражает строку
+# запроса в поле url, поэтому прогон управляет «числом полученных объектов»
+# числом параметров obj (тело эхо кодирует в base64, в нём считать нечего).
+# Фаза запроса судит по заполнению: с половины корзины -- счёт, с 90% --
+# отказ. Числа согласованы с ёмкостью stand_objects (20): запрос с десятью
+# obj греет корзину до половины, второй такой же -- до потолка, и следующий
+# запрос адреса получает 429.
+
+mode: enforce
+description: "Стенд: объекты из эхо-ответов, суд по адресу"
+
+# Приём note: сосед action греет сигнальную корзину stand_abuse процентами её
+# ёмкости (минус снимает, -100 обнуляет). Заряд ложится на фазе ответа, суд
+# читает его со следующего запроса субъекта -- прогон tests/counter шлёт эти
+# сообщения через шину, ровно той формой, что доставляет модуль.
+trigger:
+  prior:
+    - { from: action, accept: [note], apply: [ip], codes: [E2E_NOTE],
+        counter: stand_abuse }
+
+request:
+  enabled: true
+  judge:
+    # 45, а не 50: между шагами прогона корзина успевает утечь на доли
+    # процента, и порог ровно в половину срабатывал бы через раз.
+    - { counter: stand_objects, axis: ip, at: 45, action: score, score: 40,
+        code: CNT_STAND_HOT }
+    - { counter: stand_objects, axis: ip, at: 90, action: deny,
+        code: CNT_STAND_BAN }
+    # Суд над сигнальной корзиной -- та же лестница, что у мерной.
+    - { counter: stand_abuse, axis: ip, at: 45, action: score, score: 40,
+        code: CNT_ABUSE_HOT }
+    - { counter: stand_abuse, axis: ip, at: 90, action: deny,
+        code: CNT_ABUSE_BAN }
+    # Личность вместо куки: корзина заведена на логин, который назвала
+    # калитка. Отказ приходит тому же человеку с любого адреса, а тому, кого
+    # калитка не назвала (или назвала непроверенным), правило молчит --
+    # субъекта на таком запросе нет.
+    - { counter: stand_people, axis: user, at: 90, action: deny,
+        code: CNT_PEOPLE_BAN }
+  deny_response: counter_limit
+
+response:
+  enabled: true
+  measure:
+    - if: { content_type: ["application/json", "+json"] }
+      source: regex_count
+      regex: 'obj=\d+'
+      counter: stand_objects
+      axes: [ip]
+    # Учёт по человеку: единица на ответ, без чтения тела. Статус 418 боевой
+    # трафик стенда не отдаёт -- правило видит только сообщения прогона.
+    - if: { status: [418] }
+      source: const
+      counter: stand_people
+      axes: [user]

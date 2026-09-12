@@ -1,0 +1,10 @@
+# Собранные бинари.
+/counter
+/counter-probe
+/inspector
+
+# Применённое поколение локального запуска.
+/profiles.applied/
+
+# Личное окружение.
+.env

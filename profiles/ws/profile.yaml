@@ -1,0 +1,31 @@
+# Стендовый профиль кадров WebSocket (nginx/tests/ws): счётчик на обе стороны.
+#
+# Кадры клиента считаются штуками в корзину ws_frames по соединению: ёмкость
+# корзины мала (5), потери велики -- шестой кадр подряд доливает её за порог,
+# и суд того же кадра закрывает соединение записью ws_policy. Кадры
+# приложения меряются байтами в ws_bytes по адресу: суда над ними нет, это
+# учёт ради учёта -- прогон проверяет, что сторона s2c доходит до счётчика.
+
+mode: enforce
+description: "Стенд кадров: кадры клиента по соединению, байты приложения по адресу"
+
+request:
+  enabled: false
+
+response:
+  enabled: false
+
+frame:
+  enabled: true
+  measure:
+    - if: { direction: [c2s] }
+      source: const
+      counter: ws_frames
+      axes: [conn]
+    - if: { direction: [s2c] }
+      source: bytes
+      counter: ws_bytes
+      axes: [ip]
+  judge:
+    - { counter: ws_frames, axis: conn, at: 100, action: deny, code: WS_FLOOD }
+  deny_response: ws_policy

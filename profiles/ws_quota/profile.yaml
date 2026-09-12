@@ -1,0 +1,47 @@
+# Стендовый профиль кадров WebSocket (nginx/tests/ws, /quota/): квота на
+# соединение и бан по адресу -- лестница из двух корзин.
+#
+# Кадры клиента считаются штуками в две корзины разом. ws_err по
+# соединению (3 кадра): с третьего кадра подряд счётчик просит соседа
+# rewrite_quota включить группу quota_error (do: mutate), и клиент вместо
+# эха получает сообщение об ошибке -- соединение живо, приложение кадров
+# не видит. ws_ban по адресу (6 кадров): шестой кадр кладёт адрес в набор
+# blocklist на минуту; локальный слой модуля закрывает сессию на следующем
+# кадре и отказывает следующему рукопожатию. Суда у профиля нет: решения
+# принимают получатели -- rewrite и локальный слой.
+
+mode: enforce
+description: "Стенд кадров: квота на соединение → error-ответы, квота на адрес → бан"
+
+request:
+  enabled: false
+
+response:
+  enabled: false
+
+frame:
+  enabled: true
+  # Считаются только текстовые кадры клиента: двоичные до счётчика не
+  # доходят (локальный слой закрывает соединение), служебные не в счёт.
+  measure:
+    - if: { direction: [c2s], opcode: [text] }
+      source: const
+      counter: ws_err
+      axes: [conn]
+    - if: { direction: [c2s], opcode: [text] }
+      source: const
+      counter: ws_ban
+      axes: [ip]
+  judge: []
+  deny_response: ws_policy
+  outcomes:
+    # 90, а не 100: между кадрами корзина успевает утечь на доли процента.
+    # Сначала включить: rewrite_quota стоит на маршруте с mode=off, и без
+    # active второй волны нет. Ось request -- на этот кадр; следующий кадр
+    # под порогом снова обойдётся без rewrite.
+    - { on: level, if: { counter: ws_err, axis: conn }, at: 90,
+        to: rewrite_quota, do: active, apply: request, code: WS_QUOTA }
+    - { on: level, if: { counter: ws_err, axis: conn }, at: 90,
+        to: rewrite_quota, do: mutate, group: quota_error, set: on, code: WS_QUOTA }
+    - { on: level, if: { counter: ws_ban, axis: ip }, at: 90,
+        list: blocklist, write: addr, ttl: 1m }

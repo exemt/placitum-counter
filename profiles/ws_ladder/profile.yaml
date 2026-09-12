@@ -1,0 +1,44 @@
+# Нагрузочный профиль лестницы квоты (nginx/tests/ws/load.mjs, /ladder/).
+#
+# Та же раскладка, что у ws_quota: две корзины по кадрам клиента (по
+# соединению и по адресу) с просьбами active+mutate соседу rewrite_quota и
+# записью адреса в blocklist, плюс байты приложения по адресу на стороне s2c.
+# Ёмкости неприличные (ws_err_load, ws_ban_load): под прогоном порог не
+# берётся, rewrite (mode=off) не зовётся вовсе, и меряется цена пути
+# «измерил две корзины → судил» на каждом кадре обеих сторон.
+
+mode: enforce
+description: "Нагрузка лестницы квоты: две корзины по кадрам, байты выдачи, просьба rewrite"
+
+request:
+  enabled: false
+
+response:
+  enabled: false
+
+frame:
+  enabled: true
+  measure:
+    - if: { direction: [c2s] }
+      source: const
+      counter: ws_err_load
+      axes: [conn]
+    - if: { direction: [c2s] }
+      source: const
+      counter: ws_ban_load
+      axes: [ip]
+    - if: { direction: [s2c] }
+      source: bytes
+      counter: ws_out
+      axes: [ip]
+  judge: []
+  deny_response: ws_policy
+  outcomes:
+    # rewrite_quota на /ladder/ стоит с mode=off: под прогоном порог не
+    # берётся, active не уходит, и второй волны нет -- меряется цена одной.
+    - { on: level, if: { counter: ws_err_load, axis: conn }, at: 90,
+        to: rewrite_quota, do: active, apply: request, code: WS_QUOTA }
+    - { on: level, if: { counter: ws_err_load, axis: conn }, at: 90,
+        to: rewrite_quota, do: mutate, group: quota_error, set: on, code: WS_QUOTA }
+    - { on: level, if: { counter: ws_ban_load, axis: ip }, at: 90,
+        list: blocklist, write: addr, ttl: 1m }

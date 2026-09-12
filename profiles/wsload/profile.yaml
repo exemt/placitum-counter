@@ -1,0 +1,33 @@
+# Нагрузочный профиль кадров WebSocket (nginx/tests/ws/load.mjs): два счётчика
+# как у боевого чата -- вход и выход.
+#
+# Кадры клиента считаются штуками по соединению (ws_in), выдача приложения --
+# байтами по адресу (ws_out). Суд есть у обоих, но порог -- полная корзина,
+# а корзины сложены так, что честный клиент их не заполняет: прогон меряет,
+# сколько стоит счёт на каждом кадре в обе стороны, а не ловит флуд. Отказ
+# всё же объявлен: без него профиль не показал бы цену пути «измерил -> судил».
+
+mode: enforce
+description: "Нагрузка кадров: кадры клиента по соединению, байты приложения по адресу"
+
+request:
+  enabled: false
+
+response:
+  enabled: false
+
+frame:
+  enabled: true
+  measure:
+    - if: { direction: [c2s] }
+      source: const
+      counter: ws_in
+      axes: [conn]
+    - if: { direction: [s2c] }
+      source: bytes
+      counter: ws_out
+      axes: [ip]
+  judge:
+    - { counter: ws_in,  axis: conn, at: 100, action: deny, code: WS_FLOOD }
+    - { counter: ws_out, axis: ip,   at: 100, action: deny, code: WS_EGRESS }
+  deny_response: ws_policy

@@ -1,0 +1,19 @@
+# Контекст сборки. Тесты (*_test.go) и профили образа НЕ исключены: сборка
+# гоняет тесты, а тест профилей поднимает каталог profiles/ целиком.
+
+README.md
+INSTALL.md
+LICENSE.md
+LICENSE.ru.md
+docs/
+.github/
+.gitignore
+.gitattributes
+
+# Стендовые профили e2e: на стенде каталог монтируется поверх образа
+# (deploy/docker-compose.yml платформы), в поставке они не нужны.
+profiles/stand/
+profiles/ws/
+profiles/ws_ladder/
+profiles/ws_quota/
+profiles/wsload/

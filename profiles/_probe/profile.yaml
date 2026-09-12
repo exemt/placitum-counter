@@ -1,0 +1,19 @@
+# Служебный профиль пробы: правило с порогом 0 срабатывает на пустой корзине,
+# поэтому вердикт deny приходит без единого заряда и без Redis. Проба шлёт
+# route.profile=_probe и ждёт deny -- см. cmd/probe.
+
+mode: enforce
+description: "Проба: deny с пустой корзины"
+
+request:
+  enabled: true
+  judge:
+    - counter: probe
+      axis: ip
+      at: 0
+      action: deny
+      code: CNT_PROBE
+  deny_response: counter_limit
+
+response:
+  enabled: false
