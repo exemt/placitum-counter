@@ -39,12 +39,12 @@ import (
 	"github.com/exemt/placitum-counter/internal/body"
 	"github.com/exemt/placitum-counter/internal/buckets"
 	"github.com/exemt/placitum-counter/internal/config"
-	"github.com/exemt/placitum-counter/internal/dataset"
 	"github.com/exemt/placitum-counter/internal/decide"
 	"github.com/exemt/placitum-counter/internal/measure"
-	"github.com/exemt/placitum-shared/netinfo"
 	"github.com/exemt/placitum-counter/internal/protocol"
 	"github.com/exemt/placitum-counter/internal/queue"
+	"github.com/exemt/placitum-shared/dataset"
+	"github.com/exemt/placitum-shared/netinfo"
 )
 
 type handler struct {
