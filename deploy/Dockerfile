@@ -30,8 +30,12 @@ COPY profiles ./profiles
 
 RUN go test ./...
 
-RUN go build -trimpath -ldflags="-s -w" -o /out/counter ./cmd/inspector && \
-    go build -trimpath -ldflags="-s -w" -o /out/counter-probe ./cmd/probe
+# Сборка в бинарь: версия и ревизия видны в журнале старта и в кадре
+# присутствия, а не только в метках образа.
+ARG VERSION=dev
+ARG REVISION=unknown
+RUN go build -trimpath -ldflags="-s -w -X main.version=${VERSION} -X main.revision=${REVISION}" -o /out/counter ./cmd/inspector && \
+    go build -trimpath -ldflags="-s -w -X main.version=${VERSION} -X main.revision=${REVISION}" -o /out/counter-probe ./cmd/probe
 
 FROM alpine:3.22
 
