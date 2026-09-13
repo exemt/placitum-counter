@@ -28,6 +28,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/exemt/placitum-counter/internal/overload"
 	"github.com/exemt/placitum-counter/internal/protocol"
 )
 
@@ -72,6 +73,10 @@ const (
 	 * субъекта, ничего не решая про этот запрос.
 	 */
 	OnLevel = "level"
+
+	// OnOverload -- инспектор перегружен: порог at -- заполнение очереди в
+	// процентах (internal/overload). Только в секции запроса.
+	OnOverload = overload.On
 
 	/*
 	 * Кого писать в набор -- те же слова, что у капчи и json. Адрес меняется
@@ -470,7 +475,8 @@ func checkPhaseAsk(do, phase, apply string) error {
 type Outcome struct {
 	On string `yaml:"on"`
 	// At -- порог сравнения; обязателен при On == score (счёт) и On == level
-	// (проценты заполнения корзины).
+	// (проценты заполнения корзины); у overload -- заполнение очереди в
+	// процентах, не назван -- край.
 	At *int `yaml:"at"`
 	// Below -- сравнивать в другую сторону: меньше at вместо «не ниже at».
 	Below bool `yaml:"below"`
@@ -655,6 +661,19 @@ func validateOutcome(section string, i int, o Outcome) error {
 		if o.Eq {
 			return fmt.Errorf("%s: eq is only for on: %s: a bucket level is "+
 				"continuous, use %q or below", where, OnScore, "at")
+		}
+
+	case OnOverload:
+		if section != "request" {
+			return fmt.Errorf("%s: on: %s is only for the request section", where, OnOverload)
+		}
+
+		if err := overload.Check(o.At); err != nil {
+			return fmt.Errorf("%s: %w", where, err)
+		}
+
+		if o.Below || o.Eq {
+			return fmt.Errorf("%s: below and eq are only for on: %s or %s", where, OnScore, OnLevel)
 		}
 
 	default:
