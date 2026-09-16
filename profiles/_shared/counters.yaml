@@ -1,0 +1,45 @@
+# Counters: a shared section of the inspector, not of a profile.
+#
+# A counter is a family of buckets, one per (axis, subject) pair. Profiles reference counters by name,
+# and a reference to an undeclared counter rejects the whole generation. Redis keys carry no profile,
+# cnt:bkt:<counter>:<axis>:<subject>, so routes with different profiles fill one count: "received many
+# objects" is a fact about the subject, not about the route.
+#
+# Every axis has two numbers: max is the capacity in the counter's natural units (matches, kilobytes,
+# requests), loss is the leak in percent of capacity per second. A quiet subject returns to zero in
+# 100/loss seconds. Profile thresholds are percentages of fill, which read the same for every counter.
+
+counters:
+  # How many application objects the subject received in responses; the measure rules of profiles
+  # decide what fills it (a regex over the response body).
+  api_objects:
+    unit: obj
+    axes:
+      ip:         { max: 1000,  loss: 2 }    # back to zero in about 50 seconds
+      asn_net:    { max: 5000,  loss: 2 }
+      sess:       { max: 800,   loss: 2 }
+
+  # How many kilobytes of JSON the subject took away. size_kb comes from the locator: the full size,
+  # even when the preview truncates the body.
+  json_kb:
+    unit: kb
+    axes:
+      ip:         { max: 51200, loss: 5 }    # 50 MB capacity
+      asn_net:    { max: 262144, loss: 5 }
+
+  # Probe counter: the _probe rule with threshold 0 fires on an empty bucket, so the health check
+  # depends neither on Redis nor on traffic.
+  probe:
+    axes:
+      ip:         { max: 1, loss: 100 }
+
+# Where the keys of configurable axes come from. sess reads the captcha clearance id cookie by default
+# (the signature is not checked: a stable key is needed, not a proof). user is off until a source is
+# named:
+#   from: "cookie:<name>" | "header:<name>"  what the client sent
+#   from: "session:user" | "session:sid"     identity from the login gate
+subjects:
+  sess:
+    cookie: waf_cid
+  user:
+    from: ""

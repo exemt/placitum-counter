@@ -1,0 +1,18 @@
+# Probe profile: a rule with threshold 0 fires on an empty bucket, so deny comes without a single
+# charge and without Redis. The probe sends route.profile=_probe and expects deny.
+
+mode: enforce
+description: "Probe: deny from an empty bucket"
+
+request:
+  enabled: true
+  judge:
+    - counter: probe
+      axis: ip
+      at: 0
+      action: deny
+      code: CNT_PROBE
+  deny_response: counter_limit
+
+response:
+  enabled: false

@@ -1,0 +1,33 @@
+# Default profile, used when the route names none.
+#
+# The default is deliberately mild: it measures both base metrics and judges only with score.
+# Deny thresholds and dataset writes are operator decisions for a specific profile.
+
+mode: enforce
+description: "Default counter: object and volume accounting, mild score"
+
+request:
+  enabled: true
+  judge:
+    - counter: api_objects
+      axis: ip
+      at: 60
+      action: score
+      score: 40
+      code: CNT_OBJECTS_IP
+    - counter: api_objects
+      axis: ip
+      at: 90
+      action: score
+      score: 80
+      code: CNT_OBJECTS_IP_HIGH
+  deny_response: counter_limit
+
+response:
+  enabled: true
+  measure:
+    - if:
+        status: [200]
+        content_type: ["application/json", "+json"]
+      source: size_kb
+      counter: json_kb
