@@ -4,7 +4,7 @@ English · [Русский](README.ru.md)
 
 Placitum behavioural inspector. Request-phase inspectors evaluate intent: what the client sent. The
 counter evaluates the result: what the client **took away**. A scraper walking through a catalog with
-honest requests looks like a shopper to signatures, and only the total tells them apart.
+legitimate requests looks like a shopper to signatures, and only the total tells them apart.
 
 One subject, three phases:
 
@@ -57,7 +57,7 @@ internal/desired/  generation from KV (policy/counter)
 profiles/          _shared/counters.yaml, default, _probe
 ```
 
-Shared process code (presence frame, machine snapshot, flow counters, log levels, geo coder
+Shared process code (presence frame, machine snapshot, flow counters, log levels, network directory
 client) comes from [`placitum-shared`](https://github.com/exemt/placitum-shared).
 
 ## License

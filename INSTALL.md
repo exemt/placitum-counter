@@ -27,9 +27,9 @@ configuration. Usually `placitum-core` installs it.
 | `WAF_COUNTER_NAME` | `counter` | name in the inspector registry and the presence frame |
 | `WAF_COUNTER_PROFILES` | `./profiles`; `/app/profiles` in the image | profile directory |
 | `WAF_COUNTER_DATA` | `<profiles>.applied`; `/var/lib/waf/counter` in the image | where rollout puts the applied generation |
-| `WAF_COUNTER_GEO_ADDR` | empty | geo coder (`host:port`); empty keeps the `asn_net` and `asn_router` axes silent, the others work |
-| `WAF_COUNTER_GEO_TIMEOUT` | `500ms` | coder wait within the message budget |
-| `WAF_COUNTER_GEO_NEG_MAX` | `0` | negative cache limit of the coder client; `0` means the default |
+| `WAF_COUNTER_GEO_ADDR` | empty | network directory (`host:port`); empty keeps the `asn_net` and `asn_router` axes silent, the others work |
+| `WAF_COUNTER_GEO_TIMEOUT` | `500ms` | network directory wait within the message budget |
+| `WAF_COUNTER_GEO_NEG_MAX` | `0` | negative cache limit of the network directory client; `0` means the default |
 | `WAF_COUNTER_LOG` | `info` | starting log level; the panel changes it live |
 | `WAF_COUNTER_VERSIONS` | `2` | accepted message schema versions |
 | `WAF_COUNTER_WORKERS` | number of CPUs | pool workers |
