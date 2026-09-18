@@ -2,8 +2,8 @@
 
 English · [Русский](README.ru.md)
 
-Placitum behavioural inspector. Request-phase inspectors judge intent: what the client sent. The
-counter judges the result: what the client **took away**. A scraper walking through a catalog with
+Placitum behavioural inspector. Request-phase inspectors evaluate intent: what the client sent. The
+counter evaluates the result: what the client **took away**. A scraper walking through a catalog with
 honest requests looks like a shopper to signatures, and only the total tells them apart.
 
 One subject, three phases:
@@ -51,7 +51,7 @@ cmd/inspector/     bus, waf.req.counter, all phases; axis keys
 cmd/probe/         health check: profile _probe with threshold 0
 internal/buckets/  GCRA buckets
 internal/measure/  response phase rules: predicate → source → charge
-internal/decide/   judgement by levels and neighbour requests, pure functions
+internal/decide/   evaluation by levels and neighbour signals, pure functions
 internal/config/   environment, counters.yaml, profiles and hot reload
 internal/desired/  generation from KV (policy/counter)
 profiles/          _shared/counters.yaml, default, _probe

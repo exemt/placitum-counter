@@ -11,8 +11,8 @@ configuration. Usually `placitum-core` installs it.
 | Component | Required | Why |
 | --- | --- | --- |
 | NATS | yes | the `waf.req.counter` queue, audit, log, profile generations |
-| Internal Redis | yes | `cnt:bkt:*` buckets; without it judgement answers `verdict: error` |
-| Exchange Redis | for the `sess` and `user` axes and body rules | request and response snapshot by locator |
+| Internal Redis | yes | `cnt:bkt:*` buckets; without it evaluation answers `verdict: error` |
+| Buffer Redis | for the `sess` and `user` axes and body rules | request and response snapshot by locator |
 | `geo` | for the `asn_net` and `asn_router` axes and `net`/`asn` writes | announcements and AS number by address |
 | Controller | yes | sends profiles and the shared counter section as generations |
 
@@ -21,7 +21,7 @@ configuration. Usually `placitum-core` installs it.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `NATS_URL` | `nats://127.0.0.1:4222` | bus |
-| `REDIS_URL` | from `inspector.conf` | exchange: request and response snapshot |
+| `REDIS_URL` | from `inspector.conf` | buffer: request and response snapshot |
 | `REDIS_INTERNAL_URL` | from `inspector.conf` | internal Redis: buckets |
 | `WAF_COUNTER_SUBJECT` | `waf.req.counter` | subscription; one for all phases, branched by `phase` in the message |
 | `WAF_COUNTER_NAME` | `counter` | name in the inspector registry and the presence frame |
@@ -68,7 +68,7 @@ waf_inspector counter subject=waf.req.counter;
 
 location /api/ {
     waf_inspect ip       wave=0 timeout=5ms;
-    waf_inspect counter  wave=1 timeout=10ms;            # judges and sends actions
+    waf_inspect counter  wave=1 timeout=10ms;            # evaluates and sends actions
     waf_inspect captcha  wave=2 timeout=10ms;
     waf_inspect response counter wave=0 timeout=10ms;    # measures
     waf_capture response headers;
