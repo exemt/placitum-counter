@@ -3,7 +3,7 @@
 English · [Русский](README.ru.md)
 
 Placitum behavioural inspector. Request-phase inspectors evaluate intent: what the client sent. The
-counter evaluates the result: what the client **took away**. A scraper walking through a catalog with
+counter evaluates the result: what the client took away. A scraper walking through a catalog with
 legitimate requests looks like a shopper to signatures, and only the total tells them apart.
 
 One subject, three phases:
@@ -15,12 +15,11 @@ frames    ──►  both on every WebSocket frame; the conn axis lives until th
 ```
 
 Buckets live in the internal Redis (GCRA, the same arithmetic as captcha). Counters are declared
-**per inspector**, not per profile, in the shared section `profiles/_shared/counters.yaml`; profile
+per inspector, not per profile, in the shared section `profiles/_shared/counters.yaml`; profile
 thresholds are percentages of fill.
 
-Not knowing is `verdict: error`: a broken message, an unsupported version, an unknown profile, a
-silent bucket Redis. There was no measurement, and choosing between pass and deny is not the
-counter's call: the route decides.
+When there is nothing to measure (a broken message, an unsupported version, an unknown profile, a
+silent bucket Redis), the answer is `verdict: error`, and the route chooses between pass and deny.
 
 ## Axes
 
